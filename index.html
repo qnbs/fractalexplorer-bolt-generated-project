@@ -1,0 +1,78 @@
+<html>
+      <head>
+        <title>Fractal Explorer</title>
+        <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet">
+      </head>
+      <body>
+        <div id="root"></div>
+        <script type="text/babel">
+          // React component for fractal canvas
+          class FractalCanvas extends React.Component {
+            constructor(props) {
+              super(props);
+              this.state = {
+                width: 800,
+                height: 600,
+                zoom: 1,
+                x: 0,
+                y: 0,
+                iterations: 1000,
+                color: '#000000',
+                fractalType: 'mandelbrot',
+                c: { re: 0, im: 0 }
+              };
+              this.canvasRef = React.createRef();
+              this.worker = new Worker('mandelbrot-worker.js');
+              this.worker.addEventListener('message', this.handleWorkerMessage);
+            }
+
+            handleWorkerMessage = (event) => {
+              const { data } = event;
+              const ctx = this.canvasRef.current.getContext('2d');
+              const imageData = ctx.createImageData(this.state.width, this.state.height);
+              for (let i = 0; i < data.length; i++) {
+                const value = data[i];
+                const r = Math.floor(value * 255);
+                const g = Math.floor(value * 128);
+                const b = Math.floor(value * 64);
+                const index = i * 4;
+                imageData.data[index] = r;
+                imageData.data[index + 1] = g;
+                imageData.data[index + 2] = b;
+                imageData.data[index + 3] = 255;
+              }
+              ctx.putImageData(imageData, 0, 0);
+            }
+
+            // ... (other methods for zooming, panning, etc.)
+          }
+
+          // React component for controls
+          class Controls extends React.Component {
+            // ... (methods for handling user input)
+          }
+
+          // Main App component
+          class App extends React.Component {
+            render() {
+              return (
+                <div className="flex flex-col h-screen">
+                  <div className="flex-1">
+                    <FractalCanvas />
+                  </div>
+                  <div className="p-4">
+                    <Controls />
+                  </div>
+                </div>
+              );
+            }
+          }
+
+          ReactDOM.render(<App />, document.getElementById('root'));
+        </script>
+      </body>
+    </html>
